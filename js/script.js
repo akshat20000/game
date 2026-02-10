@@ -1,137 +1,161 @@
+//1. Project Setup
+// Html->canvas, javascript ->references,
+// canvas set (width,height,background-color)
+//obtain the context
+//2. Player
+//3. FAlling , gravity
+//4. Movement->optimize
+//5. Platforms
+
+const speed=2;
+
 const gameCanvas=document.querySelector("#gameCanvas");
 gameCanvas.width=window.innerWidth;
 gameCanvas.height=window.innerHeight;
 gameCanvas.style.background="yellow";
-
 const context=gameCanvas.getContext("2d");
+const gravity=0.5;
+const keys={
+    right:false,
+    left:false
+}
+//2. Player
+class Player{
+    constructor()
+    {
+        this.position={
+            x:150,
+            y:300
+        }
+        this.velocity={
+            x:0,
+            y:1
+        }
+        this.width=20;
+        this.height=20;
 
-// //context.fillRect(100,100,50,100);
+    }
+    draw()
+    {
+        context.fillStyle="black";
+        context.fillRect(this.position.x,this.position.y,this.width,this.height);
 
-// context.fillStyle="red";
-// context.strokeStyle="red";
-// //context.strokeRect(100,100,50,100);
+    }
+    update()
+    {
+        
+        this.position.y+=this.velocity.y;
+        this.position.x+=this.velocity.x;
 
-// context.beginPath();
-// context.arc(100,100,50,0,Math.PI*2);
-// context.stroke();
-// //context.closePath();
-
-// context.moveTo(300,300);
-// context.lineTo(400,500);
-// context.stroke();
-// context.closePath();
-// context.beginPath();
-// context.arc(300,100,50,0,Math.PI*2);
-// context.stroke();
-
-// context.font="50px Arial";
-// context.strokeText("Hello",100,100);
-
-
-class Circle{
-   //x=10;
-   constructor(x,y,radius,speed)
-   {
-    this.x=x;
-    this.y=y;
-    this.radius=radius;
-    this.speed=speed;
-   }
-   display()
-   {
-    this.x=10;
-
-    console.log(this.x);
-   }
-   read(x,y,radius)
-   {
-    this.x=x;
-    this.y=y;
-    this.radius=radius
-   }
-   draw()
-   {
-    context.beginPath();
-    context.arc(this.x+this.speed,this.y+this.speed,this.radius,0,Math.PI*2);
-    context.stroke();
-    context.closePath();
+        if(this.position.y+this.height+this.velocity.y>=window.innerHeight)
+            this.velocity.y=0;
+        else
+            this.velocity.y+=gravity;
 
 
-   }
+
+
+        this.draw();
+    }
 
 }
 
-//Circle c; Compile time object
-//Circle *c=new Circle(); Runtime
+class Platform{
+    constructor(x,y,width,height)
+    {
+        this.position={
+            x:x,
+            y:y
+        }
+        this.width=width;
+        this.height=height;
+    }
+    draw()
+    {
+        context.fillStyle="red";
+        context.fillRect(this.position.x,this.position.y,this.width,this.height);
 
-// //Circle c=new Circle();
-// let c=new Circle();
-// //console.log(c.x);
-// //c.display();
-// c.draw();
+    }
+    update()
+    {
+        this.draw();
 
-// let c1=new Circle();
-// //console.log(c.x);
-// //c.display();
-// c1.draw();
+    }
+}
 
-// let c=new Circle();
-// c.read(100,100,50);
-// c.draw();
-
-
-// let c1=new Circle();
-// c1.read(200,100,50);
-// c1.draw();
-
-
-// let c=new Circle(100,100,50);
-// c.draw();
-
-
-// let c1=new Circle(100,200,50);
-// c1.draw();
-
-// let circles=[];
-
-// for(i=1;i<=10;i++)
-// {
-//     //let c=new Circle(100+i*10,100+i*10,50);
-//     let x=Math.random()*window.innerWidth;
-//     let y=Math.random()*window.innerHeight;
-
-//     let c=new Circle(x,y    ,50);
-//     circles.push(c);
-
-//     //c.draw();
-
-// }
+const player=new Player();
+player.draw();
+const platform=new Platform(300,window.innerHeight-100,40,100);
+//const platform=new Platform(300,420,100,40);
+platform.draw();
 
 
-// circles.forEach((circle)=>{
-//     circle.draw();
 
-// })
-let c=new Circle(100,100,50,0);
-c.draw();
-
-// console.log("first");
-// setTimeout(test,0);
-// console.log("Second");
-// function test()
-// {
-//     console.log("test called");
-// }
-
-//setInterval(animate,100);
-function animate()
-{
+function animate(){
     requestAnimationFrame(animate);
-
     context.clearRect(0,0,window.innerWidth,window.innerHeight);
+platform.update();
+    player.update();
+    
 
-    c.speed+=1;
-    c.draw();
+    if(keys.right && player.position.x<800)
+        player.velocity.x=speed;
+    else if (keys.left && player.position.x>150)
+        player.velocity.x=-speed;
+    else    
+        player.velocity.x=0;
+
+    if(player.position.x+player.width+player.velocity.x>=platform.position.x
+        && player.position.y>=platform.position.y && (player.position.y+player.height)<=(platform.position.y+platform.height)
+    )
+        player.velocity.x=0;
+
+    if(player.position.y+player.height>=platform.position.y &&
+        player.position.x+player.width+player.velocity.x>=platform.position.x &&
+        player.position.x<=platform.position.x+platform.width
+    )
+        player.velocity.y=0;
 
 }
 animate();
+// addEventListener("keydown",(e)=>{
+//     //console.log(e);
+//     if(e.key=="ArrowRight")
+//         player.velocity.x=speed;
+//     if(e.key=="ArrowLeft")
+//         player.velocity.x=-speed;
+//     if(e.key=="ArrowUp")
+//         player.velocity.y=-10;
+// })
+
+// addEventListener("keyup",(e)=>{
+//     //console.log(e);
+//     if(e.key=="ArrowRight")
+//         player.velocity.x=0;
+//     if(e.key=="ArrowLeft")
+//         player.velocity.x=0;
+// })
+
+
+addEventListener("keydown",(e)=>{
+    //console.log(e);
+    if(e.key=="ArrowRight")
+        keys.right=true;
+        //player.velocity.x=speed;
+    if(e.key=="ArrowLeft")
+        keys.left=true;
+        //player.velocity.x=-speed;
+    if(e.key=="ArrowUp")
+        player.velocity.y=-12;
+})
+
+addEventListener("keyup",(e)=>{
+    //console.log(e);
+    if(e.key=="ArrowRight")
+        keys.right=false;
+       // player.velocity.x=0;
+    if(e.key=="ArrowLeft")
+        keys.left=false;
+        //player.velocity.x=0;
+})
+

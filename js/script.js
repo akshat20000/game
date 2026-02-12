@@ -6,8 +6,40 @@
 //3. FAlling , gravity
 //4. Movement->optimize
 //5. Platforms
+//6. Collision
+//7. Multiple Platforms
+//8. Scrolling -> plalform
+//9. Win situation
+//10. Pitfall
 
 const speed=2;
+let offset=0;
+const totalImages=4;
+const backImage=new Image();
+backImage.src="./images/background.png";
+
+const hillsImage=new Image();
+hillsImage.src="./images/hills.png";
+
+const plaformBase=new Image();
+plaformBase.src="./images/platform.png";
+
+const plaformSmall=new Image();
+plaformSmall.src="./images/platformSmallTall.png";
+
+let images=[backImage,hillsImage,plaformBase,plaformSmall];
+
+let gameStart=false;
+let count=0;
+
+images.forEach((image)=>{
+    image.addEventListener("load",()=>{
+        count++;
+    })
+})
+
+
+
 
 const gameCanvas=document.querySelector("#gameCanvas");
 gameCanvas.width=window.innerWidth;
@@ -48,7 +80,11 @@ class Player{
         this.position.x+=this.velocity.x;
 
         if(this.position.y+this.height+this.velocity.y>=window.innerHeight)
-            this.velocity.y=0;
+            {
+                   this.velocity.y=0;
+                    window.location.reload();
+
+            }
         else
             this.velocity.y+=gravity;
 
@@ -60,20 +96,48 @@ class Player{
 
 }
 
+// class Platform{
+//     constructor(x,y,width,height,image)
+//     {
+//         this.position={
+//             x:x,
+//             y:y
+//         }
+//         this.width=width;
+//         this.height=height;
+//         this.image=image;
+//     }
+//     draw()
+//     {
+//         context.fillStyle="red";
+//         context.fillRect(this.position.x,this.position.y,this.width,this.height);
+
+//     }
+//     update()
+//     {
+//         this.draw();
+
+//     }
+// }
+
+
 class Platform{
-    constructor(x,y,width,height)
+    constructor(x,y,image)
     {
         this.position={
             x:x,
             y:y
         }
-        this.width=width;
-        this.height=height;
+        this.width=image.width;
+        this.height=image.height;
+        this.image=image;
     }
     draw()
     {
-        context.fillStyle="red";
-        context.fillRect(this.position.x,this.position.y,this.width,this.height);
+       // context.fillStyle="red";
+       // context.fillRect(this.position.x,this.position.y,this.width,this.height);
+       context.drawImage(this.image,this.position.x,this.position.y,this.width,this.height);
+       
 
     }
     update()
@@ -83,41 +147,108 @@ class Platform{
     }
 }
 
+
 const player=new Player();
 player.draw();
-const platform=new Platform(300,window.innerHeight-100,40,100);
+const platform1=new Platform(200,window.innerHeight-plaformSmall.height,plaformSmall);
+//const platform2=new Platform(600,window.innerHeight-180,40,100);
+//const platform3=new Platform(1350,window.innerHeight-180,40,100);
 //const platform=new Platform(300,420,100,40);
-platform.draw();
+//platform.draw();
+
+//base platform
+// const basePlaform1=new Platform(0,window.innerHeight-80,450,80);
+// const basePlaform2=new Platform(520,window.innerHeight-80,1250,80);
+
+const basePlaform1=new Platform(0,window.innerHeight-plaformBase.height,plaformBase);
+const basePlaform2=new Platform(plaformBase.width+90,window.innerHeight-plaformBase.height,plaformBase);
+const basePlaform3=new Platform(plaformBase.width+90,window.innerHeight-plaformBase.height,plaformBase);
+const basePlaform4=new Platform(plaformBase.width*2+15,window.innerHeight-plaformBase.height,plaformBase);
+
+const platforms=[];
+platforms.push(platform1,basePlaform1,basePlaform2,basePlaform3,basePlaform4);
+
 
 
 
 function animate(){
     requestAnimationFrame(animate);
     context.clearRect(0,0,window.innerWidth,window.innerHeight);
-platform.update();
+    context.drawImage(backImage,0-offset,0);
+context.drawImage(hillsImage,0-offset,0);
+
+
+        //platform.update();
+        //platform1.update();
+        platforms.forEach((platform)=>{
+            platform.update();
+
+        })
     player.update();
     
 
-    if(keys.right && player.position.x<800)
+    if(keys.right && player.position.x<950)
         player.velocity.x=speed;
-    else if (keys.left && player.position.x>150)
+    else if (keys.left && player.position.x>250)
         player.velocity.x=-speed;
     else    
+    {
         player.velocity.x=0;
+            if(keys.right)
+            {
+                offset+=speed;
+                platforms.forEach((platform)=>{
+                        platform.position.x-=speed;
+                })
+            }
 
-    if(player.position.x+player.width+player.velocity.x>=platform.position.x
-        && player.position.y>=platform.position.y && (player.position.y+player.height)<=(platform.position.y+platform.height)
-    )
-        player.velocity.x=0;
+                if(keys.left)
+                { offset-=speed;
+                platforms.forEach((platform)=>{
+                        platform.position.x+=speed;
+                })
+            }
 
-    if(player.position.y+player.height>=platform.position.y &&
-        player.position.x+player.width+player.velocity.x>=platform.position.x &&
-        player.position.x<=platform.position.x+platform.width
-    )
-        player.velocity.y=0;
+    }
+    if(offset+950>=8000)
+        console.log("Win");
+
+//console.log(offset);
+
+    platforms.forEach((platform)=>{
+         //Collision
+        if (player.position.x + player.width + 1 >= platform.position.x &&
+            player.position.x <= platform.position.x + platform.width &&
+            player.position.y + player.height >= platform.position.y &&
+            player.position.y <= platform.position.y + platform.height
+        )
+            player.velocity.x = 0;
+
+        if ((player.position.y + player.height) <= platform.position.y &&
+            (player.position.y + player.height + player.velocity.y) >= platform.position.y
+            && player.position.x + player.width >= platform.position.x
+            &&
+            player.position.x <= platform.position.x + platform.width
+
+        )
+            player.velocity.y = 0;
+
+    })
+    
 
 }
-animate();
+let id=setInterval(check,100);
+function check()
+{
+    if(count==totalImages && gameStart==false)
+    {
+        gameStart=true;
+        clearInterval(id);
+        animate();
+
+    }
+}
+
 // addEventListener("keydown",(e)=>{
 //     //console.log(e);
 //     if(e.key=="ArrowRight")
